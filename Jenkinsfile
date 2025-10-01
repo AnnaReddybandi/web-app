@@ -1,57 +1,40 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'web-app'                        // Docker image name
-        DOCKER_REGISTRY = 'annareddy'                 // Your DockerHub username
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                echo "Cloning GitHub repository..."
                 git branch: 'main', url: 'https://github.com/AnnaReddybandi/web-app.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
-                script {
-                    docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:latest")
-                }
+                sh 'docker build -t webapp:latest .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Test') {
             steps {
-                echo "Pushing Docker image to DockerHub..."
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials-id') {
-                        docker.image("${DOCKER_REGISTRY}/${IMAGE_NAME}:latest").push()
-                    }
-                }
+                // Basic test: check if image runs and responds
+                sh '''
+                docker run -d --name temp_webapp -p 8081:80 webapp:latest
+                sleep 5
+                curl -I http://localhost:8081 | grep "200 OK"
+                docker stop temp_webapp
+                docker rm temp_webapp
+                '''
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "Deployment stage - add your server/Kubernetes deployment commands here"
+                sh '''
+                docker stop webapp || true
+                docker rm webapp || true
+                docker run -d --name webapp -p 80:80 webapp:latest
+                '''
             }
         }
     }
-
-    post {
-        always {
-            echo "Cleaning workspace..."
-            cleanWs()
-        }
-        success {
-            echo "Pipeline succeeded! Docker image pushed successfully."
-        }
-        failure {
-            echo "Pipeline failed! Check logs for errors."
-        }
-    }
 }
-
