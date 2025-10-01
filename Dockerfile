@@ -1,14 +1,14 @@
-# use lightwight alpine image
+# Use official Nginx image
 FROM nginx:alpine
 
-#copy project file
-COPY index.html /urs/share/nginx/html/index.html
-COPY style.css /urs/share/nginx/html/style.css
-COPY script.js /urs/share/nginx/html/script.js
+# Remove default Nginx website
+RUN rm -rf /usr/share/nginx/html/*
 
-#expose port 80
+# Copy all your web app files into Nginx html folder
+COPY . /usr/share/nginx/html/
 
+# Expose port 80
 EXPOSE 80
 
-#start nginx 
-CMD ["nginx","-g","daemon off;"]
+# Start Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
