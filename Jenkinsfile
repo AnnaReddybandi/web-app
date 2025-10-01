@@ -16,7 +16,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Basic test: check if image runs and responds
+                // Basic test: check if container responds
                 sh '''
                 docker run -d --name temp_webapp -p 8081:80 webapp:latest
                 sleep 5
@@ -32,7 +32,7 @@ pipeline {
                 sh '''
                 docker stop webapp || true
                 docker rm webapp || true
-                docker run -d --name webapp -p 80:80 webapp:latest
+                docker run -d --name webapp -p 8090:80 webapp:latest
                 '''
             }
         }
